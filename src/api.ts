@@ -1,42 +1,59 @@
+import { SEED_PROBLEMS } from './data/seed'
+import { getSupabase, problemToRow, rowToProblem } from './lib/supabase'
 import type { Problem } from './types'
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-    ...init,
-  })
-  if (!res.ok) {
-    let message = `HTTP ${res.status}`
-    try {
-      const body = (await res.json()) as { error?: string }
-      if (body.error) message = body.error
-    } catch {
-      /* ignore */
+export async function fetchProblems(): Promise<Problem[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('problems')
+    .select('*')
+    .order('leetcode_id', { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return (data ?? []).map(rowToProblem)
+}
+
+export async function createProblem(problem: Problem): Promise<Problem> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('problems')
+    .insert(problemToRow(problem))
+    .select('*')
+    .single()
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error(`Problem #${problem.leetcodeId} already exists`)
     }
-    throw new Error(message)
+    throw new Error(error.message)
   }
-  if (res.status === 204) return undefined as T
-  return (await res.json()) as T
+  return rowToProblem(data)
 }
 
-export function fetchProblems() {
-  return request<Problem[]>('/api/problems')
+export async function updateProblem(problem: Problem): Promise<Problem> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('problems')
+    .update({
+      ...problemToRow(problem),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', problem.id)
+    .select('*')
+    .single()
+
+  if (error) throw new Error(error.message)
+  return rowToProblem(data)
 }
 
-export function createProblem(problem: Problem) {
-  return request<Problem>('/api/problems', {
-    method: 'POST',
-    body: JSON.stringify(problem),
-  })
-}
+export async function resetProblemsApi(): Promise<Problem[]> {
+  const supabase = getSupabase()
+  const { error: delError } = await supabase.from('problems').delete().gte('leetcode_id', 0)
+  if (delError) throw new Error(delError.message)
 
-export function updateProblem(problem: Problem) {
-  return request<Problem>(`/api/problems/${encodeURIComponent(problem.id)}`, {
-    method: 'PUT',
-    body: JSON.stringify(problem),
-  })
-}
+  const rows = SEED_PROBLEMS.map(problemToRow)
+  const { data, error } = await supabase.from('problems').insert(rows).select('*')
+  if (error) throw new Error(error.message)
 
-export function resetProblemsApi() {
-  return request<Problem[]>('/api/problems/reset', { method: 'POST' })
+  return (data ?? []).map(rowToProblem).sort((a, b) => a.leetcodeId - b.leetcodeId)
 }

@@ -238,7 +238,7 @@ export default function App() {
             type="button"
             className="ghost-btn"
             onClick={() => {
-              if (!confirm('恢复示例数据？会覆盖当前服务器记录。')) return
+              if (!confirm('恢复示例数据？会覆盖当前 Supabase 记录。')) return
               resetProblemsApi()
                 .then((rows) => {
                   setProblems(rows)
@@ -258,7 +258,10 @@ export default function App() {
       <main className="main">
         {loadError ? (
           <p className="boot-error">
-            后端连不上：{loadError}。请先运行 <code>npm run dev</code>（会同时启动 API）。
+            无法连接 Supabase：{loadError}
+            <br />
+            请复制 <code>.env.example</code> 为 <code>.env.local</code>，填入项目 URL 和 anon
+            key，并在 Supabase SQL Editor 执行 <code>supabase/schema.sql</code>。
           </p>
         ) : (
           <ProblemTable
