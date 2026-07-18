@@ -4,6 +4,7 @@ import { NotesBlock } from './NotesBlock'
 import { CodeVersions } from './CodeVersions'
 import { ProblemBrief } from './ProblemBrief'
 import { StatusSelect } from './StatusSelect'
+import { TopicEditor } from './TopicEditor'
 
 type Props = {
   problem: Problem
@@ -35,7 +36,7 @@ export function DetailPanel({
         title: hit.title,
         slug: hit.slug,
         difficulty: hit.difficulty,
-        topics: hit.topics,
+        topics: hit.topics.length > 0 ? hit.topics : problem.topics,
       })
       return
     }
@@ -86,13 +87,10 @@ export function DetailPanel({
         slug={problem.slug}
       />
 
-      <div className="topic-row">
-        {problem.topics.map((t) => (
-          <span key={t} className="topic-chip">
-            {t}
-          </span>
-        ))}
-      </div>
+      <TopicEditor
+        value={problem.topics}
+        onChange={(topics) => onChange({ ...problem, topics })}
+      />
 
       <NotesBlock
         value={problem.notes}
@@ -127,7 +125,7 @@ export function DetailPanel({
       />
 
       {(isCreate || onDelete) && (
-        <div className="drawer__footer">
+        <div className={`drawer__footer${isCreate ? '' : ' drawer__footer--end'}`}>
           {isCreate ? (
             <>
               <button type="button" className="ghost-btn" onClick={onClose}>

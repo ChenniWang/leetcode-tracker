@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { STATUS_PRESETS } from '../types'
 
 type Props = {
@@ -8,9 +9,14 @@ type Props = {
   wide?: boolean
 }
 
+type MenuPos = { top: number; left: number; width: number }
+
 export function StatusSelect({ value, onChange, wide = false }: Props) {
   const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState<MenuPos | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLUListElement>(null)
   const listId = useId()
 
   const options =
@@ -18,10 +24,43 @@ export function StatusSelect({ value, onChange, wide = false }: Props) {
       ? [value, ...STATUS_PRESETS]
       : [...STATUS_PRESETS]
 
+  function updatePos() {
+    const btn = btnRef.current
+    if (!btn) return
+    const r = btn.getBoundingClientRect()
+    const menuH = menuRef.current?.offsetHeight ?? options.length * 36 + 12
+    const spaceBelow = window.innerHeight - r.bottom
+    const openUp = spaceBelow < menuH + 8 && r.top > spaceBelow
+    setPos({
+      top: openUp ? Math.max(8, r.top - menuH - 4) : r.bottom + 4,
+      left: r.left,
+      width: Math.max(r.width, wide ? 140 : 88),
+    })
+  }
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null)
+      return
+    }
+    updatePos()
+    const raf = requestAnimationFrame(() => updatePos())
+    const onReposition = () => updatePos()
+    window.addEventListener('resize', onReposition)
+    window.addEventListener('scroll', onReposition, true)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', onReposition)
+      window.removeEventListener('scroll', onReposition, true)
+    }
+  }, [open, options.length, wide])
+
   useEffect(() => {
     if (!open) return
     function onDoc(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (rootRef.current?.contains(t) || menuRef.current?.contains(t)) return
+      setOpen(false)
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)
@@ -34,6 +73,37 @@ export function StatusSelect({ value, onChange, wide = false }: Props) {
     }
   }, [open])
 
+  const menu =
+    open && pos
+      ? createPortal(
+          <ul
+            className="status-select__menu status-select__menu--portal"
+            id={listId}
+            role="listbox"
+            ref={menuRef}
+            style={{ top: pos.top, left: pos.left, width: pos.width }}
+          >
+            {options.map((s) => (
+              <li key={s} role="option" aria-selected={s === value}>
+                <button
+                  type="button"
+                  className={`status-select__option status-tone ${toneClass(s)}${
+                    s === value ? ' is-active' : ''
+                  }`}
+                  onClick={() => {
+                    onChange(s)
+                    setOpen(false)
+                  }}
+                >
+                  {s}
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )
+      : null
+
   return (
     <div
       className={`status-select${wide ? ' is-wide' : ''}${open ? ' is-open' : ''}`}
@@ -42,6 +112,7 @@ export function StatusSelect({ value, onChange, wide = false }: Props) {
     >
       <button
         type="button"
+        ref={btnRef}
         className={`status-select__btn status-tone ${toneClass(value)}`}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -53,26 +124,7 @@ export function StatusSelect({ value, onChange, wide = false }: Props) {
           ▾
         </span>
       </button>
-      {open && (
-        <ul className="status-select__menu" id={listId} role="listbox">
-          {options.map((s) => (
-            <li key={s} role="option" aria-selected={s === value}>
-              <button
-                type="button"
-                className={`status-select__option status-tone ${toneClass(s)}${
-                  s === value ? ' is-active' : ''
-                }`}
-                onClick={() => {
-                  onChange(s)
-                  setOpen(false)
-                }}
-              >
-                {s}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {menu}
     </div>
   )
 }

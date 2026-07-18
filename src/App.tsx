@@ -5,28 +5,12 @@ import { AuthScreen } from './components/AuthScreen'
 import { DetailPanel } from './components/DetailPanel'
 import { ProblemTable } from './components/ProblemTable'
 import { useAuth } from './lib/auth'
+import { TOPIC_OPTIONS } from './data/topics'
 import { createProblemFromId } from './lib/createProblem'
 import { STATUS_PRESETS, type Difficulty, type Problem, type SortDir, type SortKey } from './types'
 import './App.css'
 
 const DIFF_RANK: Record<Difficulty, number> = { Easy: 1, Medium: 2, Hard: 3 }
-
-const ALL_TOPICS = [
-  'Array',
-  'Hash Table',
-  'Dynamic Programming',
-  'Two Pointers',
-  'Stack',
-  'Sliding Window',
-  'Heap',
-  'Quickselect',
-  'Design',
-  'Linked List',
-  'Tree',
-  'BFS',
-  'Divide and Conquer',
-  'String',
-]
 
 export default function App() {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -244,7 +228,7 @@ export default function App() {
           </select>
           <select value={topic} onChange={(e) => setTopic(e.target.value)}>
             <option value="all">全部 Topic</option>
-            {ALL_TOPICS.map((t) => (
+            {TOPIC_OPTIONS.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
