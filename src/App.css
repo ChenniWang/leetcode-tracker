@@ -114,6 +114,7 @@
 .drawer__footer {
   position: sticky;
   bottom: 0;
+  z-index: 1;
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
@@ -301,16 +302,26 @@
   border-top: 1px solid rgba(28, 36, 32, 0.06);
 }
 
-.filter-signout {
+.filter-account {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  max-width: 10rem;
+  padding: 0.15rem 0.2rem;
+}
+
+.filter-signout {
   border: 0;
   background: transparent;
   color: #8a968e;
   font-size: 0.72rem;
   font-weight: 500;
-  padding: 0.35rem 0.4rem;
+  padding: 0.15rem 0.25rem;
   border-radius: 6px;
   opacity: 0.75;
+  line-height: 1.2;
   transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
@@ -318,6 +329,17 @@
   opacity: 1;
   color: #5a6a60;
   background: rgba(28, 36, 32, 0.05);
+}
+
+.filter-email {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  color: #9aa49c;
+  line-height: 1.2;
+  padding: 0 0.25rem;
 }
 
 .search,
@@ -563,6 +585,16 @@
 
 .status-select.is-open {
   z-index: 8;
+}
+
+/* Drawer meta sits above sticky footer — open upward so the menu isn't clipped */
+.status-select.is-wide.is-open {
+  z-index: 40;
+}
+
+.status-select.is-wide .status-select__menu {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 
 .status-select__btn {

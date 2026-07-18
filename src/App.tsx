@@ -274,18 +274,23 @@ export default function App() {
             <option value="status:asc">排序：状态</option>
             <option value="lastPracticedAt:desc">排序：最近练习</option>
           </select>
-          <button
-            type="button"
-            className="filter-signout"
-            title={user.email ?? '退出账号'}
-            onClick={() => {
-              void signOut().catch((err: unknown) => {
-                alert(err instanceof Error ? err.message : '退出失败')
-              })
-            }}
-          >
-            退出
-          </button>
+          <div className="filter-account">
+            <button
+              type="button"
+              className="filter-signout"
+              title={user.email ?? '退出账号'}
+              onClick={() => {
+                void signOut().catch((err: unknown) => {
+                  alert(err instanceof Error ? err.message : '退出失败')
+                })
+              }}
+            >
+              退出
+            </button>
+            <span className="filter-email" title={user.email ?? undefined}>
+              {user.email}
+            </span>
+          </div>
         </div>
       </header>
 
