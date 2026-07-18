@@ -12,6 +12,7 @@ type Props = {
   onClose: () => void
   onChange: (next: Problem) => void
   onConfirmCreate?: () => void
+  onDelete?: () => void
 }
 
 export function DetailPanel({
@@ -20,6 +21,7 @@ export function DetailPanel({
   onClose,
   onChange,
   onConfirmCreate,
+  onDelete,
 }: Props) {
   const isCreate = mode === 'create'
 
@@ -124,14 +126,22 @@ export function DetailPanel({
         onChange={(codeVersions) => onChange({ ...problem, codeVersions })}
       />
 
-      {isCreate && (
+      {(isCreate || onDelete) && (
         <div className="drawer__footer">
-          <button type="button" className="ghost-btn" onClick={onClose}>
-            取消
-          </button>
-          <button type="button" className="drawer__confirm" onClick={onConfirmCreate}>
-            确定新增
-          </button>
+          {isCreate ? (
+            <>
+              <button type="button" className="ghost-btn" onClick={onClose}>
+                取消
+              </button>
+              <button type="button" className="drawer__confirm" onClick={onConfirmCreate}>
+                确定新增
+              </button>
+            </>
+          ) : (
+            <button type="button" className="drawer__danger" onClick={onDelete}>
+              删除此题
+            </button>
+          )}
         </div>
       )}
     </aside>

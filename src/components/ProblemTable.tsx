@@ -10,6 +10,7 @@ type Props = {
   onSort: (key: SortKey) => void
   onSelect: (id: string) => void
   onPatch: (id: string, patch: Partial<Problem>) => void
+  onDelete: (id: string) => void
 }
 
 const DIFF_CLASS: Record<Difficulty, string> = {
@@ -45,6 +46,7 @@ export function ProblemTable({
   onSort,
   onSelect,
   onPatch,
+  onDelete,
 }: Props) {
   return (
     <div className="table-wrap">
@@ -58,6 +60,7 @@ export function ProblemTable({
           <col className="col-attempts" />
           <col className="col-status" />
           <col className="col-date" />
+          <col className="col-actions" />
         </colgroup>
         <thead>
           <tr>
@@ -104,6 +107,7 @@ export function ProblemTable({
                 onClick={() => onSort('lastPracticedAt')}
               />
             </th>
+            <th aria-label="操作" />
           </tr>
         </thead>
         <tbody>
@@ -157,13 +161,24 @@ export function ProblemTable({
                   <StatusCell value={p.status} onChange={(status) => onPatch(p.id, { status })} />
                 </td>
                 <td className="date-cell mono muted">{p.lastPracticedAt}</td>
+                <td className="actions-cell" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="row-delete"
+                    title="删除"
+                    aria-label={`删除 ${p.leetcodeId}`}
+                    onClick={() => onDelete(p.id)}
+                  >
+                    删除
+                  </button>
+                </td>
               </tr>
             )
           })}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={8} className="empty">
-                没有匹配的题目，试试放宽筛选。
+              <td colSpan={9} className="empty">
+                还没有题目，在上方输入题号添加。
               </td>
             </tr>
           )}

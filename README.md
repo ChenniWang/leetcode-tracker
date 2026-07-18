@@ -2,7 +2,7 @@
 
 A personal LeetCode workbook: spreadsheet-style tracking for problems you’ve solved, with notes, multiple code versions, and auto-complete from problem IDs (title + LeetCode link).
 
-Data is stored in **Supabase**. The UI can be hosted on **GitHub Pages** at:
+Data is stored in **Supabase** (per-user after login). The UI is hosted on **GitHub Pages**:
 
 `https://chenniwang.github.io/leetcode-tracker/`
 
@@ -12,29 +12,31 @@ Data is stored in **Supabase**. The UI can be hosted on **GitHub Pages** at:
 
 ## Features
 
+- Email/password login — each account only sees its own problems
 - Spreadsheet-like table: ID, title, topic, difficulty, notes, attempts, status
+- Delete a problem from the table or the detail drawer
 - Status options: Done / Review / Passed (dropdown)
-- Detail drawer: notes first; multi-version code (drafts + optimal, optimal opened by default)
-- Enter a problem ID to auto-fill title, difficulty, and LeetCode link (~4000 problems indexed)
-- New problems start as a draft — edit first, then confirm to save
+- Detail drawer: notes first; multi-version code (drafts + optimal)
+- Enter a problem ID to auto-fill title, difficulty, and LeetCode link
 - Filter / sort by difficulty, topic, status, ID, and more
-- Cloud persistence via Supabase (same idea as a static notes app + hosted DB)
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
 | Frontend | React 18 + Vite + TypeScript |
-| Database | Supabase (Postgres) |
+| Auth + DB | Supabase Auth + Postgres (RLS) |
 | Hosting | GitHub Pages |
 
 ## 1. Create a Supabase project
 
 1. Go to [https://supabase.com](https://supabase.com) and create a project.
 2. Open **SQL Editor** → New query → paste and run [`supabase/schema.sql`](./supabase/schema.sql).
-3. Open **Project Settings → API** and copy:
-   - Project URL
-   - `anon` `public` key
+3. **Authentication → Providers → Email**: enable Email. For easier testing, turn **off** “Confirm email”.
+4. **Authentication → URL Configuration**:
+   - Site URL: `https://chenniwang.github.io/leetcode-tracker`
+   - Redirect URLs: add `https://chenniwang.github.io/leetcode-tracker/**` and `http://127.0.0.1:5173/**`
+5. **Project Settings → API**: copy Project URL and `anon` `public` key.
 
 ## 2. Local setup
 
@@ -58,9 +60,9 @@ VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 and add problems from an empty list.
+Open http://127.0.0.1:5173 — register / log in, then add problems.
 
-## 3. Deploy to GitHub Pages (clickable `*.github.io` URL)
+## 3. Deploy to GitHub Pages
 
 ### Repo secrets
 
@@ -69,8 +71,6 @@ In GitHub: **Settings → Secrets and variables → Actions** → add:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-(same values as `.env.local`)
-
 ### Enable Pages
 
 1. **Settings → Pages**
@@ -78,12 +78,9 @@ In GitHub: **Settings → Secrets and variables → Actions** → add:
 
 ### Deploy
 
-Push to `main` (or run the **Deploy GitHub Pages** workflow manually).  
-After it finishes, open:
+Push to `main` (or run **Deploy GitHub Pages**). Then open:
 
 **https://chenniwang.github.io/leetcode-tracker/**
-
-> Free GitHub Pages + anon key means your workbook data is readable/writable by anyone who has the built site’s public anon key. Fine for a personal tracker; add auth later if you need privacy.
 
 ## Scripts
 
@@ -96,7 +93,7 @@ After it finishes, open:
 ## Notes
 
 - Optional: refresh the problem-ID index with `node scripts/update-leetcode-index.mjs`
-- The old Express + local JSON backend was removed in favor of Supabase.
+- After enabling auth isolation, re-run `supabase/schema.sql` if you still have the old open RLS policy.
 
 ## License
 

@@ -1,8 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { CodeVersion, Difficulty, Problem } from '../types'
 
-type ProblemRow = {
+export type ProblemRow = {
   id: string
+  user_id: string
   leetcode_id: number
   title: string
   slug: string
@@ -39,7 +40,13 @@ export function getSupabase(): SupabaseClient {
     )
   }
   const url = normalizeSupabaseUrl(rawUrl)
-  client = createClient(url, anonKey)
+  client = createClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
   return client
 }
 
@@ -63,9 +70,10 @@ export function rowToProblem(row: ProblemRow): Problem {
   }
 }
 
-export function problemToRow(problem: Problem): ProblemRow {
+export function problemToRow(problem: Problem, userId: string): Omit<ProblemRow, never> {
   return {
     id: problem.id,
+    user_id: userId,
     leetcode_id: problem.leetcodeId,
     title: problem.title,
     slug: problem.slug,
@@ -77,4 +85,12 @@ export function problemToRow(problem: Problem): ProblemRow {
     last_practiced_at: problem.lastPracticedAt,
     code_versions: problem.codeVersions,
   }
+}
+
+export async function requireUserId(): Promise<string> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw new Error(error.message)
+  if (!data.user) throw new Error('请先登录')
+  return data.user.id
 }

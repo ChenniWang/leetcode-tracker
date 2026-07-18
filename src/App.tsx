@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createProblem, fetchProblems, updateProblem } from './api'
+import { createProblem, deleteProblem, fetchProblems, updateProblem } from './api'
 import { AddProblem } from './components/AddProblem'
+import { AuthScreen } from './components/AuthScreen'
 import { DetailPanel } from './components/DetailPanel'
 import { ProblemTable } from './components/ProblemTable'
+import { useAuth } from './lib/auth'
 import { createProblemFromId } from './lib/createProblem'
 import { STATUS_PRESETS, type Difficulty, type Problem, type SortDir, type SortKey } from './types'
 import './App.css'
@@ -27,6 +29,7 @@ const ALL_TOPICS = [
 ]
 
 export default function App() {
+  const { user, loading: authLoading, signOut } = useAuth()
   const [problems, setProblems] = useState<Problem[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -40,6 +43,15 @@ export default function App() {
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   useEffect(() => {
+    if (!user) {
+      setProblems([])
+      setSelectedId(null)
+      setDraft(null)
+      setLoading(false)
+      setLoadError('')
+      return
+    }
+
     let cancelled = false
     setLoading(true)
     fetchProblems()
@@ -60,7 +72,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user])
 
   const selected = problems.find((p) => p.id === selectedId) ?? null
   const panelProblem = draft ?? selected
@@ -159,6 +171,22 @@ export default function App() {
     setDraft(null)
   }
 
+  async function handleDelete(id: string) {
+    const target = problems.find((p) => p.id === id)
+    const label = target ? `#${target.leetcodeId} ${target.title}` : '这道题'
+    if (!confirm(`确定删除 ${label}？`)) return
+    const prev = problems
+    setProblems((list) => list.filter((p) => p.id !== id))
+    if (selectedId === id) setSelectedId(null)
+    if (draft?.id === id) setDraft(null)
+    try {
+      await deleteProblem(id)
+    } catch (err) {
+      setProblems(prev)
+      alert(err instanceof Error ? err.message : '删除失败')
+    }
+  }
+
   function selectByLeetcodeId(leetcodeId: number) {
     setDraft(null)
     const hit = problems.find((p) => p.leetcodeId === leetcodeId)
@@ -168,6 +196,18 @@ export default function App() {
   function selectRow(id: string) {
     setDraft(null)
     setSelectedId(id)
+  }
+
+  if (authLoading) {
+    return (
+      <div className="auth-screen">
+        <p className="auth-loading">加载中…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <AuthScreen />
   }
 
   return (
@@ -180,6 +220,22 @@ export default function App() {
             {loading ? ' · 加载中…' : ''}
             {loadError ? ` · ${loadError}` : ''}
           </p>
+        </div>
+        <div className="topbar__user">
+          <span className="topbar__email" title={user.email ?? undefined}>
+            {user.email}
+          </span>
+          <button
+            type="button"
+            className="ghost-btn"
+            onClick={() => {
+              void signOut().catch((err: unknown) => {
+                alert(err instanceof Error ? err.message : '退出失败')
+              })
+            }}
+          >
+            退出
+          </button>
         </div>
         <AddProblem
           existingIds={problems.map((p) => p.leetcodeId)}
@@ -242,12 +298,13 @@ export default function App() {
           <p className="boot-error">
             无法连接 Supabase：{loadError}
             <br />
+            若提示权限 / RLS，请在 Supabase SQL Editor 重新执行{' '}
+            <code>supabase/schema.sql</code>。
+            <br />
             检查 GitHub Secrets：
             <code>VITE_SUPABASE_URL</code> 只能是{' '}
             <code>https://xxxx.supabase.co</code>（不要加 <code>/rest/v1</code>），
             <code>VITE_SUPABASE_ANON_KEY</code> 必须是 publishable / anon public。
-            改完后重新 Run「Deploy GitHub Pages」。本地开发则改 <code>.env.local</code> 后重启{' '}
-            <code>npm run dev</code>。
           </p>
         ) : (
           <ProblemTable
@@ -258,6 +315,7 @@ export default function App() {
             onSort={handleSort}
             onSelect={selectRow}
             onPatch={patchProblem}
+            onDelete={(id) => void handleDelete(id)}
           />
         )}
       </main>
@@ -279,6 +337,9 @@ export default function App() {
               else void persist(next)
             }}
             onConfirmCreate={() => void confirmCreate()}
+            onDelete={
+              draft ? undefined : () => void handleDelete(panelProblem.id)
+            }
           />
         </>
       )}
