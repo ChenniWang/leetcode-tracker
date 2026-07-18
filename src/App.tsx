@@ -160,8 +160,8 @@ export default function App() {
     try {
       const created = await createProblem(draft)
       setProblems((prev) => [created, ...prev])
-      setSelectedId(created.id)
       setDraft(null)
+      setSelectedId(null)
     } catch (err) {
       alert(err instanceof Error ? err.message : '新增失败')
     }
@@ -221,22 +221,6 @@ export default function App() {
             {loadError ? ` · ${loadError}` : ''}
           </p>
         </div>
-        <div className="topbar__user">
-          <span className="topbar__email" title={user.email ?? undefined}>
-            {user.email}
-          </span>
-          <button
-            type="button"
-            className="ghost-btn"
-            onClick={() => {
-              void signOut().catch((err: unknown) => {
-                alert(err instanceof Error ? err.message : '退出失败')
-              })
-            }}
-          >
-            退出
-          </button>
-        </div>
         <AddProblem
           existingIds={problems.map((p) => p.leetcodeId)}
           onAdd={startCreate}
@@ -290,6 +274,18 @@ export default function App() {
             <option value="status:asc">排序：状态</option>
             <option value="lastPracticedAt:desc">排序：最近练习</option>
           </select>
+          <button
+            type="button"
+            className="filter-signout"
+            title={user.email ?? '退出账号'}
+            onClick={() => {
+              void signOut().catch((err: unknown) => {
+                alert(err instanceof Error ? err.message : '退出失败')
+              })
+            }}
+          >
+            退出
+          </button>
         </div>
       </header>
 
@@ -315,7 +311,6 @@ export default function App() {
             onSort={handleSort}
             onSelect={selectRow}
             onPatch={patchProblem}
-            onDelete={(id) => void handleDelete(id)}
           />
         )}
       </main>
