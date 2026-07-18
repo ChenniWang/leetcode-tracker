@@ -139,7 +139,7 @@ export function DetailPanel({
             </>
           ) : (
             <button type="button" className="drawer__danger" onClick={onDelete}>
-              删除此题
+              删除
             </button>
           )}
         </div>

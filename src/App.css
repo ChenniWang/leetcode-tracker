@@ -137,19 +137,21 @@
 }
 
 .drawer__danger {
-  border: 1px solid rgba(178, 58, 47, 0.35);
-  background: rgba(178, 58, 47, 0.08);
-  color: #8a3128;
-  border-radius: 8px;
-  padding: 0.55rem 1.15rem;
-  font-weight: 600;
-  margin-right: auto;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  border: 0;
+  background: transparent;
+  color: #b08a86;
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
 .drawer__danger:hover {
-  background: rgba(178, 58, 47, 0.14);
-  border-color: rgba(178, 58, 47, 0.5);
+  opacity: 1;
+  color: #8a3128;
+  background: rgba(178, 58, 47, 0.08);
 }
 
 
