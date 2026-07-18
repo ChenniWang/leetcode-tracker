@@ -260,8 +260,12 @@ export default function App() {
           <p className="boot-error">
             无法连接 Supabase：{loadError}
             <br />
-            请复制 <code>.env.example</code> 为 <code>.env.local</code>，填入项目 URL 和 anon
-            key，并在 Supabase SQL Editor 执行 <code>supabase/schema.sql</code>。
+            检查 GitHub Secrets：
+            <code>VITE_SUPABASE_URL</code> 只能是{' '}
+            <code>https://xxxx.supabase.co</code>（不要加 <code>/rest/v1</code>），
+            <code>VITE_SUPABASE_ANON_KEY</code> 必须是 publishable / anon public。
+            改完后重新 Run「Deploy GitHub Pages」。本地开发则改 <code>.env.local</code> 后重启{' '}
+            <code>npm run dev</code>。
           </p>
         ) : (
           <ProblemTable

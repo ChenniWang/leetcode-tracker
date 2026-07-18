@@ -17,15 +17,28 @@ type ProblemRow = {
 
 let client: SupabaseClient | null = null
 
+/** Project URL only — strip accidental /rest/v1 or trailing slash from dashboard copy-paste */
+function normalizeSupabaseUrl(raw: string): string {
+  let url = raw.trim().replace(/\/+$/, '')
+  url = url.replace(/\/rest\/v1$/i, '')
+  return url
+}
+
 export function getSupabase(): SupabaseClient {
   if (client) return client
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-  if (!url || !anonKey) {
+  const rawUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+  const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim()
+  if (!rawUrl || !anonKey) {
     throw new Error(
-      'Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. Copy .env.example to .env.local and fill in your project keys.',
+      'Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. For local: copy .env.example to .env.local. For GitHub Pages: set Actions secrets and redeploy.',
     )
   }
+  if (anonKey.startsWith('sb_secret_') || anonKey.includes('service_role')) {
+    throw new Error(
+      'You used a secret/service_role key. Use the publishable key (sb_publishable_...) or legacy anon public key instead.',
+    )
+  }
+  const url = normalizeSupabaseUrl(rawUrl)
   client = createClient(url, anonKey)
   return client
 }
