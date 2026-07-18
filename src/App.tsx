@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createProblem, fetchProblems, resetProblemsApi, updateProblem } from './api'
+import { createProblem, fetchProblems, updateProblem } from './api'
 import { AddProblem } from './components/AddProblem'
 import { DetailPanel } from './components/DetailPanel'
 import { ProblemTable } from './components/ProblemTable'
@@ -234,24 +234,6 @@ export default function App() {
             <option value="status:asc">排序：状态</option>
             <option value="lastPracticedAt:desc">排序：最近练习</option>
           </select>
-          <button
-            type="button"
-            className="ghost-btn"
-            onClick={() => {
-              if (!confirm('恢复示例数据？会覆盖当前 Supabase 记录。')) return
-              resetProblemsApi()
-                .then((rows) => {
-                  setProblems(rows)
-                  setSelectedId(null)
-                  setDraft(null)
-                })
-                .catch((err: unknown) => {
-                  alert(err instanceof Error ? err.message : '重置失败')
-                })
-            }}
-          >
-            重置示例
-          </button>
         </div>
       </header>
 

@@ -1,4 +1,3 @@
-import { SEED_PROBLEMS } from './data/seed'
 import { getSupabase, problemToRow, rowToProblem } from './lib/supabase'
 import type { Problem } from './types'
 
@@ -44,16 +43,4 @@ export async function updateProblem(problem: Problem): Promise<Problem> {
 
   if (error) throw new Error(error.message)
   return rowToProblem(data)
-}
-
-export async function resetProblemsApi(): Promise<Problem[]> {
-  const supabase = getSupabase()
-  const { error: delError } = await supabase.from('problems').delete().gte('leetcode_id', 0)
-  if (delError) throw new Error(delError.message)
-
-  const rows = SEED_PROBLEMS.map(problemToRow)
-  const { data, error } = await supabase.from('problems').insert(rows).select('*')
-  if (error) throw new Error(error.message)
-
-  return (data ?? []).map(rowToProblem).sort((a, b) => a.leetcodeId - b.leetcodeId)
 }

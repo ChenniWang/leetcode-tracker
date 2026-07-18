@@ -58,7 +58,7 @@ VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 — then click **重置示例** once to load sample rows (or add problems yourself).
+Open http://127.0.0.1:5173 and add problems from an empty list.
 
 ## 3. Deploy to GitHub Pages (clickable `*.github.io` URL)
 
