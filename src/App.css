@@ -567,7 +567,8 @@
 .sheet td.id-cell,
 .sheet td.title-cell,
 .sheet td.topic-cell,
-.sheet td.diff-cell {
+.sheet td.diff-cell,
+.sheet td.notes-cell {
   text-align: center;
   vertical-align: middle;
 }

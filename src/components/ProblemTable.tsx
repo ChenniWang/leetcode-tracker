@@ -79,7 +79,7 @@ export function ProblemTable({
                 onClick={() => onSort('difficulty')}
               />
             </th>
-            <th>笔记</th>
+            <th className="is-center">笔记</th>
             <th>
               <SortBtn
                 label="遍数"
