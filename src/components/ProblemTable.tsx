@@ -80,7 +80,7 @@ export function ProblemTable({
               />
             </th>
             <th className="is-center">笔记</th>
-            <th>
+            <th className="is-center">
               <SortBtn
                 label="遍数"
                 active={sortKey === 'attempts'}
@@ -88,7 +88,7 @@ export function ProblemTable({
                 onClick={() => onSort('attempts')}
               />
             </th>
-            <th>
+            <th className="is-center">
               <SortBtn
                 label="状态"
                 active={sortKey === 'status'}
@@ -96,7 +96,7 @@ export function ProblemTable({
                 onClick={() => onSort('status')}
               />
             </th>
-            <th>
+            <th className="is-center">
               <SortBtn
                 label="最近"
                 active={sortKey === 'lastPracticedAt'}

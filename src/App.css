@@ -568,7 +568,10 @@
 .sheet td.title-cell,
 .sheet td.topic-cell,
 .sheet td.diff-cell,
-.sheet td.notes-cell {
+.sheet td.notes-cell,
+.sheet td.attempts-cell,
+.sheet td.status-cell,
+.sheet td.date-cell {
   text-align: center;
   vertical-align: middle;
 }
@@ -576,6 +579,15 @@
 .sheet th.is-center .th-sort {
   width: 100%;
   text-align: center;
+}
+
+.attempts-cell .cell-num {
+  margin-inline: auto;
+  display: block;
+}
+
+.status-cell .status-select {
+  margin-inline: auto;
 }
 
 .id-cell,
@@ -646,7 +658,7 @@
 }
 
 .status-select.is-wide {
-  max-width: none;
+  max-width: 6.5rem;
 }
 
 .status-select.is-open {
@@ -705,7 +717,14 @@
 
 .status-select__menu--portal {
   position: fixed;
+  top: auto;
+  left: auto;
   right: auto;
+  bottom: auto;
+  min-width: 0;
+  max-width: none;
+  width: auto;
+  box-sizing: border-box;
   z-index: 10000;
 }
 
@@ -716,7 +735,7 @@
 .status-select__option {
   width: 100%;
   display: block;
-  text-align: left;
+  text-align: center;
   border: 0;
   background: transparent;
   border-radius: 5px;

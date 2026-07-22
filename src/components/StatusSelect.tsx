@@ -31,10 +31,16 @@ export function StatusSelect({ value, onChange, wide = false }: Props) {
     const menuH = menuRef.current?.offsetHeight ?? options.length * 36 + 12
     const spaceBelow = window.innerHeight - r.bottom
     const openUp = spaceBelow < menuH + 8 && r.top > spaceBelow
+    // Match the trigger exactly — never inflate to viewport via CSS min-width: 100%
+    const width = Math.max(72, Math.round(r.width))
+    let left = r.left
+    if (left + width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - width - 8)
+    }
     setPos({
       top: openUp ? Math.max(8, r.top - menuH - 4) : r.bottom + 4,
-      left: r.left,
-      width: Math.max(r.width, wide ? 140 : 88),
+      left,
+      width,
     })
   }
 
