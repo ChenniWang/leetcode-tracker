@@ -139,10 +139,9 @@ export default function App() {
     setDraft(createProblemFromId(leetcodeId))
   }
 
-  async function confirmCreate() {
-    if (!draft) return
+  async function confirmCreate(problem: Problem) {
     try {
-      const created = await createProblem(draft)
+      const created = await createProblem(problem)
       setProblems((prev) => [created, ...prev])
       setDraft(null)
       setSelectedId(null)
@@ -153,6 +152,24 @@ export default function App() {
 
   function cancelCreate() {
     setDraft(null)
+  }
+
+  async function handleSave(next: Problem) {
+    if (draft) {
+      await confirmCreate(next)
+      return
+    }
+    try {
+      await persist(next)
+      setSelectedId(null)
+    } catch {
+      // persist already alerts / reloads
+    }
+  }
+
+  function handleCancel() {
+    if (draft) cancelCreate()
+    else setSelectedId(null)
   }
 
   async function handleDelete(id: string) {
@@ -310,17 +327,13 @@ export default function App() {
             type="button"
             className="backdrop"
             aria-label="关闭详情"
-            onClick={() => (draft ? cancelCreate() : setSelectedId(null))}
+            onClick={handleCancel}
           />
           <DetailPanel
             problem={panelProblem}
             mode={panelMode}
-            onClose={() => (draft ? cancelCreate() : setSelectedId(null))}
-            onChange={(next) => {
-              if (draft) setDraft(next)
-              else void persist(next)
-            }}
-            onConfirmCreate={() => void confirmCreate()}
+            onSave={(next) => void handleSave(next)}
+            onCancel={handleCancel}
             onDelete={
               draft ? undefined : () => void handleDelete(panelProblem.id)
             }

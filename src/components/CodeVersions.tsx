@@ -1,22 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CodeVersion } from '../types'
 import { defaultVersionId, orderCodeVersions } from '../lib/sortVersions'
 
 type Props = {
   versions: CodeVersion[]
   onChange: (versions: CodeVersion[]) => void
+  /** Fill available height (drawer right pane) */
+  fill?: boolean
 }
 
-export function CodeVersions({ versions, onChange }: Props) {
+export function CodeVersions({ versions, onChange, fill = false }: Props) {
   const ordered = orderCodeVersions(versions)
   const [activeId, setActiveId] = useState<string | null>(() => defaultVersionId(versions))
-  const [expanded, setExpanded] = useState(versions.length > 0)
+  const [expanded, setExpanded] = useState(fill || versions.length > 0)
+  const activeIdRef = useRef(activeId)
+  activeIdRef.current = activeId
 
+  // Keep current tab unless that version was removed — never snap back to 最优解 on rename.
   useEffect(() => {
-    setActiveId(defaultVersionId(versions))
+    const prev = activeIdRef.current
+    if (prev && versions.some((v) => v.id === prev)) return
+    const next = defaultVersionId(versions)
+    setActiveId(next)
+    activeIdRef.current = next
   }, [versions])
 
-  const active = ordered.find((v) => v.id === activeId) ?? ordered[ordered.length - 1]
+  useEffect(() => {
+    if (fill) setExpanded(true)
+  }, [fill])
+
+  const active = ordered.find((v) => v.id === activeId) ?? null
+
+  function selectVersion(id: string) {
+    activeIdRef.current = id
+    setActiveId(id)
+  }
 
   function addDraft() {
     const id = `v-${Date.now()}`
@@ -27,9 +45,10 @@ export function CodeVersions({ versions, onChange }: Props) {
       code: '',
       isOptimal: false,
     }
-    onChange([...versions.filter((v) => !v.isOptimal), next, ...versions.filter((v) => v.isOptimal)])
+    activeIdRef.current = id
     setActiveId(id)
     setExpanded(true)
+    onChange([...versions.filter((v) => !v.isOptimal), next, ...versions.filter((v) => v.isOptimal)])
   }
 
   function addOptimal() {
@@ -42,24 +61,28 @@ export function CodeVersions({ versions, onChange }: Props) {
       code: '',
       isOptimal: true,
     }
-    onChange([...versions, next])
+    activeIdRef.current = id
     setActiveId(id)
     setExpanded(true)
+    onChange([...versions, next])
   }
 
   function updateActive(patch: Partial<CodeVersion>) {
-    if (!active) return
-    onChange(versions.map((v) => (v.id === active.id ? { ...v, ...patch } : v)))
+    const id = activeIdRef.current
+    if (!id) return
+    onChange(versions.map((v) => (v.id === id ? { ...v, ...patch } : v)))
   }
 
   return (
-    <section className="code-panel">
+    <section className={`code-panel${fill ? ' code-panel--fill' : ''}`}>
       <div className="notes__bar">
         <h3 className="panel-section-title">代码版本</h3>
         <div className="code-panel__actions">
-          <button type="button" className="ghost-btn" onClick={() => setExpanded((e) => !e)}>
-            {expanded ? '收起' : '展开'}
-          </button>
+          {!fill && (
+            <button type="button" className="ghost-btn" onClick={() => setExpanded((e) => !e)}>
+              {expanded ? '收起' : '展开'}
+            </button>
+          )}
           <button type="button" className="ghost-btn" onClick={addDraft}>
             + 草稿
           </button>
@@ -92,8 +115,10 @@ export function CodeVersions({ versions, onChange }: Props) {
                 type="button"
                 role="tab"
                 aria-selected={v.id === active?.id}
-                className={`code-tab${v.id === active?.id ? ' is-active' : ''}${v.isOptimal ? ' is-optimal' : ''}`}
-                onClick={() => setActiveId(v.id)}
+                className={`code-tab${v.id === active?.id ? ' is-active' : ''}${
+                  v.isOptimal ? ' is-optimal' : ''
+                }`}
+                onClick={() => selectVersion(v.id)}
               >
                 {v.label}
                 {v.isOptimal ? ' ★' : ''}

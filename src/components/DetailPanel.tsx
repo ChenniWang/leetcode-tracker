@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { Problem } from '../types'
 import { lookupById, titleToSlug } from '../data/problemCatalog'
 import { NotesBlock } from './NotesBlock'
@@ -8,140 +9,154 @@ import { TopicEditor } from './TopicEditor'
 
 type Props = {
   problem: Problem
-  /** 新增草稿：底部显示「确定新增」，取消不入列表 */
+  /** 新增：底部「保存」写入数据库；取消不保存 */
   mode?: 'view' | 'create'
-  onClose: () => void
-  onChange: (next: Problem) => void
-  onConfirmCreate?: () => void
+  onSave: (next: Problem) => void
+  onCancel: () => void
   onDelete?: () => void
 }
 
 export function DetailPanel({
   problem,
   mode = 'view',
-  onClose,
-  onChange,
-  onConfirmCreate,
+  onSave,
+  onCancel,
   onDelete,
 }: Props) {
   const isCreate = mode === 'create'
+  const [local, setLocal] = useState(problem)
+
+  useEffect(() => {
+    setLocal(problem)
+  }, [problem.id, mode])
+
+  function patch(updater: (prev: Problem) => Problem) {
+    setLocal(updater)
+  }
 
   function applyLeetcodeId(raw: string) {
     const leetcodeId = Math.max(0, Number(raw) || 0)
     const hit = lookupById(leetcodeId)
-    if (hit) {
-      onChange({
-        ...problem,
+    patch((prev) => {
+      if (hit) {
+        return {
+          ...prev,
+          leetcodeId,
+          title: hit.title,
+          slug: hit.slug,
+          difficulty: hit.difficulty,
+          topics: hit.topics.length > 0 ? hit.topics : prev.topics,
+        }
+      }
+      return {
+        ...prev,
         leetcodeId,
-        title: hit.title,
-        slug: hit.slug,
-        difficulty: hit.difficulty,
-        topics: hit.topics.length > 0 ? hit.topics : problem.topics,
-      })
-      return
-    }
-    onChange({
-      ...problem,
-      leetcodeId,
-      slug: problem.title ? titleToSlug(problem.title) : problem.slug,
+        slug: prev.title ? titleToSlug(prev.title) : prev.slug,
+      }
     })
   }
 
   return (
     <aside className="drawer" aria-label={isCreate ? '新增题目' : '题目详情'}>
       <header className="drawer__head">
-        <div>
+        <div className="drawer__head-main">
           <label className="id-edit">
             <span>#</span>
             <input
               className="id-edit__input mono"
               type="number"
               min={1}
-              value={problem.leetcodeId || ''}
+              value={local.leetcodeId || ''}
               onChange={(e) => applyLeetcodeId(e.target.value)}
               aria-label="题号"
             />
           </label>
           <input
             className="drawer__title-input"
-            value={problem.title}
+            value={local.title}
             onChange={(e) => {
               const title = e.target.value
-              onChange({
-                ...problem,
+              patch((prev) => ({
+                ...prev,
                 title,
-                slug: titleToSlug(title) || problem.slug,
-              })
+                slug: titleToSlug(title) || prev.slug,
+              }))
             }}
             placeholder="题目标题"
           />
         </div>
-        <button type="button" className="ghost-btn" onClick={onClose}>
-          {isCreate ? '取消' : '关闭'}
-        </button>
       </header>
 
-      <ProblemBrief
-        leetcodeId={problem.leetcodeId}
-        title={problem.title}
-        slug={problem.slug}
-      />
+      <div className="drawer__body">
+        <div className="drawer__side">
+          <ProblemBrief leetcodeId={local.leetcodeId} title={local.title} slug={local.slug} />
 
-      <TopicEditor
-        value={problem.topics}
-        onChange={(topics) => onChange({ ...problem, topics })}
-      />
-
-      <NotesBlock
-        value={problem.notes}
-        onChange={(notes) => onChange({ ...problem, notes })}
-      />
-
-      <div className="drawer__meta">
-        <label className="field">
-          <span>遍数</span>
-          <input
-            type="number"
-            min={0}
-            value={problem.attempts}
-            onChange={(e) =>
-              onChange({ ...problem, attempts: Math.max(0, Number(e.target.value) || 0) })
-            }
+          <TopicEditor
+            value={local.topics}
+            onChange={(topics) => patch((prev) => ({ ...prev, topics }))}
           />
-        </label>
-        <label className="field">
-          <span>状态</span>
-          <StatusSelect
-            wide
-            value={problem.status}
-            onChange={(status) => onChange({ ...problem, status })}
+
+          <NotesBlock
+            value={local.notes}
+            onChange={(notes) => patch((prev) => ({ ...prev, notes }))}
           />
-        </label>
+
+          <div className="drawer__meta">
+            <label className="field">
+              <span>遍数</span>
+              <input
+                type="number"
+                min={0}
+                value={local.attempts}
+                onChange={(e) =>
+                  patch((prev) => ({
+                    ...prev,
+                    attempts: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+              />
+            </label>
+            <label className="field">
+              <span>状态</span>
+              <StatusSelect
+                wide
+                value={local.status}
+                onChange={(status) => patch((prev) => ({ ...prev, status }))}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="drawer__code">
+          <CodeVersions
+            fill
+            versions={local.codeVersions}
+            onChange={(codeVersions) => patch((prev) => ({ ...prev, codeVersions }))}
+          />
+        </div>
       </div>
 
-      <CodeVersions
-        versions={problem.codeVersions}
-        onChange={(codeVersions) => onChange({ ...problem, codeVersions })}
-      />
-
-      {(isCreate || onDelete) && (
-        <div className={`drawer__footer${isCreate ? '' : ' drawer__footer--end'}`}>
-          {isCreate ? (
-            <>
-              <button type="button" className="ghost-btn" onClick={onClose}>
-                取消
-              </button>
-              <button type="button" className="drawer__confirm" onClick={onConfirmCreate}>
-                确定新增
-              </button>
-            </>
-          ) : (
-            <button type="button" className="drawer__danger" onClick={onDelete}>
-              删除
-            </button>
-          )}
+      <div className="drawer__footer drawer__footer--actions">
+        {onDelete ? (
+          <button type="button" className="drawer__action drawer__action--danger" onClick={onDelete}>
+            删除
+          </button>
+        ) : (
+          <span />
+        )}
+        <div className="drawer__footer-right">
+          <button type="button" className="drawer__action" onClick={onCancel}>
+            取消
+          </button>
+          <button
+            type="button"
+            className="drawer__action drawer__action--save"
+            onClick={() => onSave(local)}
+          >
+            保存
+          </button>
         </div>
-      )}
+      </div>
     </aside>
   )
 }
