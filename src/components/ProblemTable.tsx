@@ -61,7 +61,7 @@ export function ProblemTable({
         </colgroup>
         <thead>
           <tr>
-            <th>
+            <th className="is-center">
               <SortBtn
                 label="题号"
                 active={sortKey === 'leetcodeId'}
@@ -69,9 +69,9 @@ export function ProblemTable({
                 onClick={() => onSort('leetcodeId')}
               />
             </th>
-            <th>题目</th>
-            <th>Topic</th>
-            <th>
+            <th className="is-center">题目</th>
+            <th className="is-center">Topic</th>
+            <th className="is-center">
               <SortBtn
                 label="难度"
                 active={sortKey === 'difficulty'}

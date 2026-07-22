@@ -563,6 +563,20 @@
   color: #143528;
 }
 
+.sheet th.is-center,
+.sheet td.id-cell,
+.sheet td.title-cell,
+.sheet td.topic-cell,
+.sheet td.diff-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sheet th.is-center .th-sort {
+  width: 100%;
+  text-align: center;
+}
+
 .id-cell,
 .diff-cell,
 .attempts-cell,
@@ -594,6 +608,7 @@
 
 .topic-cell .topic-row {
   gap: 0.25rem;
+  justify-content: center;
 }
 
 .notes-cell {
